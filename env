@@ -1,0 +1,5 @@
+DB_HOST=localhost
+DB_USER=anitaro
+DB_PASSWORD=Anitaro24
+DB_NAME=anitaro
+PORT=6969
