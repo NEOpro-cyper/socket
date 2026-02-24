@@ -197,7 +197,28 @@ io.on('connection', (socket) => {
         }
     });
 
-    // Handle request for room state
+// Guest requests sync → notify host only
+    socket.on('request_sync', (data) => {
+        const { roomId } = data;
+        const hostId = roomHosts.get(roomId);
+        for (const socketId of roomUsers.get(roomId) || []) {
+            const socketUser = onlineUsers.get(socketId);
+            if (socketUser && socketUser.id === hostId) {
+                io.to(socketId).emit('host_sync_requested');
+                console.log(`Sync requested in room ${roomId} — notified host ${socketId}`);
+                break;
+            }
+        }
+    });
+
+    // Host sends current time → forward to all guests
+    socket.on('sync_time_response', (data) => {
+        const { roomId, time } = data;
+        socket.to(roomId).emit('sync_response', { time });
+        console.log(`Sync time ${time}s forwarded to guests in room ${roomId}`);
+    });
+
+    // Handle request for room state  ← your existing line stays here
     socket.on('request_room_state', async ({ roomId }) => {
         console.log(`User ${socket.id} requested room state for ${roomId}`);
         try {
